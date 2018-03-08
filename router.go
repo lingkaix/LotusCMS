@@ -107,7 +107,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	for _, rh := range handlers {
 		if a, b, _ := rh.matchURL(req.URL.Path); a {
-			//fmt.Println("matched:", rh.url)
+			fmt.Println("matched:", rh.url, rh.pattern)
 			isMatched = true
 			rh.handleFunc(w, req, *b)
 			break
@@ -134,14 +134,21 @@ type RouterHandler struct {
 }
 
 func (r *RouterHandler) init(url string, handler func(http.ResponseWriter, *http.Request, map[string]string)) error {
+	if url[len(url)-1:] == "/" {
+		url = url[0 : len(url)-1]
+	}
 	r.url = url
 	r.handleFunc = handler
-	regx, _ := regexp.Compile("{([a-zA-Z]+)}")
+	regx, _ := regexp.Compile("{([a-zA-Z0-9]+)}")
 	for regx.MatchString(url) {
 		url = strings.Replace(url, regx.FindStringSubmatch(url)[0], "(?P<"+regx.FindStringSubmatch(url)[1]+">[a-z,A-Z,0-9]+)", -1)
 	}
+	if url[len(url)-4:] == "/***" {
+		url = url[0:len(url)-4] + "(?P<_trail_>/.+)"
+	}
 	regx2, err := regexp.Compile(url)
 	if err != nil {
+		fmt.Println(err)
 		return errors.New("url pattern complile error -> " + err.Error())
 	}
 	r.pattern = regx2
