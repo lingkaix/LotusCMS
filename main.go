@@ -22,7 +22,7 @@ func initDatabase() {
 
 func initRouter() {
 	mainRouter.get("/login", f)    //get login form
-	mainRouter.post("/login", f)   //login, get token
+	mainRouter.post("/login", f)   //login, return token if success
 	mainRouter.get("/file/***", f) //get file
 	mainRouter.post("/file", f)    //upload file
 	//get list
@@ -61,10 +61,17 @@ func initRouter() {
 
 //for developing
 func f(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	initRouter()
+	data := make(map[string]string)
+	data["sub"] = "1234567890"
+	data["name"] = "John Doe"
+	data["iat"] = "1516239022"
+	op, _ := token.encode(data)
+	fmt.Println(op)
 	res := responeseData{
 		Status:  200,
 		Massege: "ok",
-		Data:    p,
+		Data:    op,
 	}
 	fmt.Fprintf(w, res.toJSON())
 }
